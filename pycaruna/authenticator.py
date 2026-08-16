@@ -23,10 +23,13 @@ BROWSER_HEADERS = {
 def _meta_refresh_url(html):
     soup = BeautifulSoup(html, "lxml")
     for meta in soup.find_all("meta"):
-        if (meta.get("http-equiv") or "").lower() != "refresh":
+        http_equiv = meta.get("http-equiv")
+        if not isinstance(http_equiv, str) or http_equiv.lower() != "refresh":
             continue
-        content = meta.get("content") or ""
-        match = re.search(r"url\s*=\s*(.+)", content, flags=re.I)
+        content = meta.get("content")
+        if not isinstance(content, str):
+            continue
+        match = re.search(r"url\s*=\s*(.+)", content, flags=re.IGNORECASE)
         if match:
             return match.group(1).strip().strip("'\"")
     return None
@@ -46,7 +49,7 @@ def _ajax_redirect(response):
 def _form_feedback(html):
     soup = BeautifulSoup(html, "lxml")
     messages = []
-    for span in soup.find_all("span", id=re.compile("FeedbackMessage", re.I)):
+    for span in soup.find_all("span", id=re.compile("FeedbackMessage", re.IGNORECASE)):
         text = span.get_text(" ", strip=True)
         if text:
             messages.append(text)
@@ -54,9 +57,7 @@ def _form_feedback(html):
 
 
 def _login_action(html, form):
-    match = re.search(
-        r'Wicket\.Ajax\.ajax\(\{"u":"([^"]+loginWithUserID)"', html
-    )
+    match = re.search(r'Wicket\.Ajax\.ajax\(\{"u":"([^"]+loginWithUserID)"', html)
     if match:
         return match.group(1)
     return form.get("action") or "./login"
@@ -103,9 +104,7 @@ class Authenticator:
             ) from err
         except requests.RequestException as err:
             if isinstance(err, ValueError):
-                raise CarunaApiError(
-                    "Caruna+ returned a non-JSON response"
-                ) from err
+                raise CarunaApiError("Caruna+ returned a non-JSON response") from err
             raise CarunaApiError("Could not reach Caruna+") from err
         except ValueError as err:
             raise CarunaApiError("Caruna+ returned a non-JSON response") from err
@@ -165,7 +164,9 @@ class Authenticator:
             feedback = _form_feedback(posted.text) or "Caruna+ rejected the login"
             raise CarunaAuthError(feedback)
         if _is_login_page(nxt, page.url):
-            feedback = _form_feedback(posted.text) or "Caruna+ rejected the email or password"
+            feedback = (
+                _form_feedback(posted.text) or "Caruna+ rejected the email or password"
+            )
             raise CarunaAuthError(feedback)
 
         follow = session.get(urljoin(posted.url, nxt), timeout=30)
@@ -176,11 +177,12 @@ class Authenticator:
 
         soup = BeautifulSoup(follow.content, "lxml")
         relay = soup.find("form")
-        if relay is None or not relay.get("action"):
+        action = relay.get("action") if relay is not None else None
+        if not isinstance(action, str) or not action:
             raise CarunaApiError("Caruna+ OpenID form was missing after login")
 
         relayed = session.post(
-            urljoin(follow.url, relay["action"]),
+            urljoin(follow.url, action),
             data=utils.get_hidden_form_vars(soup),
             allow_redirects=False,
             timeout=30,

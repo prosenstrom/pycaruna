@@ -14,10 +14,27 @@ Supported features:
 ## Install
 
 ```
+uv add git+https://github.com/prosenstrom/pycaruna.git
+```
+
+Or with pip:
+
+```
 pip install git+https://github.com/prosenstrom/pycaruna.git
 ```
 
 This fork is not published on PyPI. Upstream `pycaruna==1.0.3` still talks to an older login and JSON shape.
+
+## Development
+
+```
+uv sync
+uv run pytest
+uv run ruff check .
+uv run ruff format --check .
+uv run bandit -c pyproject.toml -r pycaruna
+uv run ty check
+```
 
 ## Usage
 

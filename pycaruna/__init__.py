@@ -5,10 +5,10 @@ from .utils import customer_ids_from_user, energy_kwh, normalize_energy
 
 __all__ = [
     "Authenticator",
-    "CarunaPlus",
     "CarunaApiError",
     "CarunaAuthError",
     "CarunaError",
+    "CarunaPlus",
     "TimeSpan",
     "customer_ids_from_user",
     "energy_kwh",

@@ -1,15 +1,15 @@
-import sys
 import os
+import sys
 
-sys.path.append('../pycaruna')
+sys.path.append("../pycaruna")
 from pycaruna import Authenticator, customer_ids_from_user
 
-if __name__ == '__main__':
-    username = os.getenv('CARUNA_USERNAME')
-    password = os.getenv('CARUNA_PASSWORD')
+if __name__ == "__main__":
+    username = os.getenv("CARUNA_USERNAME")
+    password = os.getenv("CARUNA_PASSWORD")
 
     if username is None or password is None:
-        raise Exception('CARUNA_USERNAME and CARUNA_PASSWORD must be defined')
+        raise Exception("CARUNA_USERNAME and CARUNA_PASSWORD must be defined")
 
     # Authenticate using your e-mail and password. This will ultimately return an object containing a token (used for
     # Caruna Plus API interaction) and a user object which among other things contain your customer IDs (needed when
@@ -21,8 +21,8 @@ if __name__ == '__main__':
     login_result = authenticator.login()
 
     # print(json.dumps(login_result))
-    print(login_result['token'])
-    customer_ids = customer_ids_from_user(login_result.get('user'))
+    print(login_result["token"])
+    customer_ids = customer_ids_from_user(login_result.get("user"))
     if not customer_ids:
-        raise Exception('No customer numbers on this account')
+        raise Exception("No customer numbers on this account")
     print(customer_ids[0])

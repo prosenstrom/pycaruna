@@ -33,9 +33,7 @@ def test_login_http_error_is_not_a_reachability_failure(monkeypatch):
 
 
 def test_login_timeout_is_reachability_failure(monkeypatch):
-    monkeypatch.setattr(
-        Authenticator, "_login", Mock(side_effect=requests.Timeout())
-    )
+    monkeypatch.setattr(Authenticator, "_login", Mock(side_effect=requests.Timeout()))
     with pytest.raises(CarunaApiError) as exc:
         Authenticator("user", "pass").login()
     assert str(exc.value) == "Could not reach Caruna+"
