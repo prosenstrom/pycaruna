@@ -44,15 +44,24 @@ resource "github_repository" "pycaruna" {
   }
 }
 
+# Dependabot alerts (and the dependency graph they require).
 resource "github_repository_vulnerability_alerts" "pycaruna" {
   repository = github_repository.pycaruna.name
   enabled    = true
 }
 
+# Dependabot security-update PRs for known vulnerabilities.
 resource "github_repository_dependabot_security_updates" "pycaruna" {
   repository = github_repository.pycaruna.name
   enabled    = true
 }
+
+# Dependabot *version* updates stay off on forks even when dependabot.yml
+# exists. GitHub has no REST/GraphQL toggle for that opt-in, and the
+# official provider has no resource. Enable once in the UI:
+# https://github.com/prosenstrom/pycaruna/settings/security_analysis
+# (Advanced Security → Dependabot version updates → Enable)
+# or Insights → Dependency graph → Dependabot → Enable Dependabot.
 
 resource "github_actions_repository_permissions" "pycaruna" {
   repository           = github_repository.pycaruna.name
