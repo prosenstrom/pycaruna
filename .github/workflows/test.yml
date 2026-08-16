@@ -39,3 +39,16 @@ jobs:
         run: uv run bandit -c pyproject.toml -r pycaruna
       - name: ty
         run: uv run ty check
+
+  ci:
+    name: ci
+    if: ${{ !cancelled() }}
+    needs:
+      - test
+      - lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require test and lint
+        run: |
+          test "${{ needs.test.result }}" = "success"
+          test "${{ needs.lint.result }}" = "success"
