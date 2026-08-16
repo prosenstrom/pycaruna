@@ -2,7 +2,7 @@ import sys
 import os
 
 sys.path.append('../pycaruna')
-from pycaruna import Authenticator
+from pycaruna import Authenticator, customer_ids_from_user
 
 if __name__ == '__main__':
     username = os.getenv('CARUNA_USERNAME')
@@ -22,4 +22,7 @@ if __name__ == '__main__':
 
     # print(json.dumps(login_result))
     print(login_result['token'])
-    print(login_result['user']['ownCustomerNumbers'][0])
+    customer_ids = customer_ids_from_user(login_result.get('user'))
+    if not customer_ids:
+        raise Exception('No customer numbers on this account')
+    print(customer_ids[0])
