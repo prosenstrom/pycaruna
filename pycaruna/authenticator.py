@@ -80,8 +80,28 @@ class Authenticator:
         """
         try:
             return self._login()
-        except requests.RequestException as err:
+        except (requests.ConnectionError, requests.Timeout) as err:
             raise CarunaApiError("Could not reach Caruna+") from err
+        except requests.HTTPError as err:
+            response = err.response
+            status = response.status_code if response is not None else None
+            url = ""
+            if err.request is not None:
+                url = err.request.url
+            elif response is not None:
+                url = response.url
+            raise CarunaApiError(
+                f"Caruna+ request failed ({status}) at {url}",
+                status_code=status,
+            ) from err
+        except requests.RequestException as err:
+            if isinstance(err, ValueError):
+                raise CarunaApiError(
+                    "Caruna+ returned a non-JSON response"
+                ) from err
+            raise CarunaApiError("Could not reach Caruna+") from err
+        except ValueError as err:
+            raise CarunaApiError("Caruna+ returned a non-JSON response") from err
 
     def _login(self):
         session = requests.Session()
