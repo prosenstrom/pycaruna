@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -59,6 +62,7 @@ jobs:
       - lint
       - secrets
     runs-on: ubuntu-latest
+    permissions: {}
     steps:
       - name: Require test, lint, and secrets
         run: |
