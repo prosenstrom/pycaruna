@@ -85,6 +85,8 @@ class CarunaPlus:
         """
         points = []
         seen = set()
+        last_error = None
+        any_success = False
         for path in (
             f"/customers/{customer_id}/assets/meteringpoints",
             f"/customers/{customer_id}/assets",
@@ -92,8 +94,12 @@ class CarunaPlus:
             try:
                 payload = self._get_json(path)
             except CarunaApiError as err:
+                if err.status_code in (401, 403):
+                    raise
                 _LOGGER.debug("Skipping %s: %s", path, err)
+                last_error = err
                 continue
+            any_success = True
             for asset in utils.asset_items(payload):
                 if not utils.is_meter(asset):
                     continue
@@ -110,6 +116,8 @@ class CarunaPlus:
                 item["customerId"] = customer_id
                 item["assetId"] = asset_id
                 points.append(item)
+        if not any_success and last_error is not None:
+            raise last_error
         return points
 
     def get_contracts(self, customer_id):
