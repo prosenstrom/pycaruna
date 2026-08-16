@@ -9,6 +9,15 @@ from pycaruna.exceptions import CarunaApiError
 _LOGGER = logging.getLogger(__name__)
 
 
+def _error_excerpt(payload, limit=120):
+    if isinstance(payload, dict):
+        for key in ("message", "error", "errorMessage", "detail"):
+            value = payload.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()[:limit]
+    return str(payload)[:limit]
+
+
 class TimeSpan(Enum):
     DAILY = "daily"
     MONTHLY = "monthly"
@@ -30,10 +39,20 @@ class CarunaPlus:
             payload = response.json()
         except ValueError as err:
             raise CarunaApiError(
-                f"Non-JSON response from {path} ({response.status_code})"
+                f"Non-JSON response from {path} ({response.status_code})",
+                status_code=response.status_code,
             ) from err
-        if response.status_code in (401, 403):
-            raise CarunaApiError(f"Unauthorized calling {path}")
+        if not response.ok:
+            if response.status_code in (401, 403):
+                raise CarunaApiError(
+                    f"Unauthorized calling {path}",
+                    status_code=response.status_code,
+                )
+            raise CarunaApiError(
+                f"Caruna+ request failed ({response.status_code}) for {path}: "
+                f"{_error_excerpt(payload)}",
+                status_code=response.status_code,
+            )
         return payload
 
     def get_user_profile(self, customer_id):
