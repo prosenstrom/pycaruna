@@ -4,7 +4,7 @@ from enum import Enum
 import requests
 
 import pycaruna.utils as utils
-from pycaruna.exceptions import CarunaApiError
+from pycaruna.exceptions import CarunaApiError, CarunaAuthError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ class CarunaPlus:
             ) from err
         if not response.ok:
             if response.status_code in (401, 403):
-                raise CarunaApiError(
+                raise CarunaAuthError(
                     f"Unauthorized calling {path}",
                     status_code=response.status_code,
                 )
