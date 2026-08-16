@@ -6,9 +6,15 @@ updates:
       interval: weekly
     groups:
       python-runtime:
+        applies-to: version-updates
         dependency-type: production
       python-dev:
+        applies-to: version-updates
         dependency-type: development
+      python-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
     labels:
       - dependencies
     open-pull-requests-limit: 10
@@ -19,6 +25,11 @@ updates:
       interval: weekly
     groups:
       github-actions:
+        applies-to: version-updates
+        patterns:
+          - "*"
+      github-actions-security:
+        applies-to: security-updates
         patterns:
           - "*"
     labels:
