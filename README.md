@@ -35,7 +35,7 @@ hours = client.get_energy(
 
 `get_energy()` always returns `{ "results": [ { "data": [ ...rows ] } ] }`. Each row may use `totalConsumption` (current API) or `consumption` (older API).
 
-The `examples/` directory has longer programs. `resources/` has older sample payloads; live energy data is now a flat list.
+The `examples/` directory has longer programs. `resources/` has sample payloads, including the current flat energy list and meteringpoints.
 
 ## Caveats
 
