@@ -84,9 +84,6 @@ class Authenticator:
     def login(self):
         """
         Performs the login dance required to obtain cookies etc. for further API communication.
-
-        Follows the live plus.caruna.fi / authentication2.caruna.fi Wicket flow. The old
-        hardcoded form action and Ajax-Location header are no longer sufficient on their own.
         """
         try:
             return self._login()

@@ -67,8 +67,7 @@ class CarunaPlus:
         """
         Returns the assets available for the specified customer.
 
-        Household meters are usually *not* on this endpoint anymore; use
-        get_metering_points() instead.
+        Household meters are usually on get_metering_points() instead.
         :param customer_id: the customer ID
         :return: the assets, including a lot of metadata about them
         """
@@ -78,8 +77,7 @@ class CarunaPlus:
         """
         Returns household metering points for the specified customer.
 
-        Tries /assets/meteringpoints first (current plus.caruna.fi, type
-        consumptionMeteringPoint), then the older /assets list.
+        Tries /assets/meteringpoints first, then /assets.
         :param customer_id: the customer ID
         :return: a list of metering-point dicts, each with assetId and customerId
         """
@@ -132,9 +130,8 @@ class CarunaPlus:
         """
         Returns energy consumption for the specified metering point.
 
-        Accepts both the current flat hourly list (totalConsumption) and the
-        older {results:[{data:[...]}]} wrapper. Always returns the wrapper
-        form so callers can iterate results[].data[].
+        Always returns {results:[{data:[...]}]}. Rows may use totalConsumption
+        or consumption.
         :param customer_id: the customer ID
         :param asset_id: the asset ID
         :param timespan: the time span (a TimeSpan enum)
