@@ -1,10 +1,16 @@
 import json
 from pathlib import Path
 
+from bs4 import BeautifulSoup
+
 from pycaruna.utils import (
     asset_items,
+    create_caruna_plus_headers,
+    create_caruna_plus_url,
     customer_ids_from_user,
     energy_kwh,
+    flatten_ids,
+    get_hidden_form_vars,
     is_meter,
     normalize_energy,
 )
@@ -71,3 +77,72 @@ def test_asset_items_and_is_meter_from_old_assets():
 
 def test_is_meter_rejects_unrelated_assets():
     assert not is_meter({"type": "contract", "id": "1"})
+
+
+def test_create_caruna_plus_url_and_headers():
+    assert create_caruna_plus_url("/customers/1/info") == (
+        "https://plus.caruna.fi/api/customers/1/info"
+    )
+    assert create_caruna_plus_headers("tok") == {
+        "Authorization": "Bearer tok",
+        "User-Agent": "pycaruna",
+    }
+
+
+def test_get_hidden_form_vars_skips_visible_and_nameless():
+    soup = BeautifulSoup(
+        """
+        <form>
+          <input type="hidden" name="csrf" value="abc">
+          <input type="hidden" name="empty">
+          <input type="text" name="user" value="x">
+          <input type="hidden" value="noname">
+        </form>
+        """,
+        "lxml",
+    )
+    assert get_hidden_form_vars(soup) == {"csrf": "abc", "empty": ""}
+
+
+def test_flatten_ids_drops_empty_and_none_tokens():
+    assert flatten_ids(None) == []
+    assert flatten_ids(["None", "[]", "", "  ", 123]) == ["123"]
+
+
+def test_asset_items_unwraps_named_lists_and_single_objects():
+    assert asset_items({"results": [{"assetId": "a"}]}) == [{"assetId": "a"}]
+    assert asset_items({"data": [{"id": 1}]}) == [{"id": 1}]
+    assert asset_items({"assets": [{"id": 1}, "skip"]}) == [{"id": 1}]
+    assert asset_items({"meteringPoints": [{"id": 1}]}) == [{"id": 1}]
+    assert asset_items({"meteringpoints": [{"id": 1}]}) == [{"id": 1}]
+    assert asset_items({"items": [{"id": 1}]}) == [{"id": 1}]
+    assert asset_items({"assetId": "solo", "gsrn": "1"}) == [
+        {"assetId": "solo", "gsrn": "1"}
+    ]
+    assert asset_items({"gsrn": "1"}) == [{"gsrn": "1"}]
+    assert asset_items({"meteringPointNumber": "1"}) == [{"meteringPointNumber": "1"}]
+    assert asset_items({"foo": "bar"}) == []
+    assert asset_items("nope") == []
+    assert asset_items([{"id": 1}, "skip"]) == [{"id": 1}]
+
+
+def test_is_meter_accepts_gsrn_tabs_and_address():
+    assert is_meter({"assetId": "1", "gsrn": "x"})
+    assert is_meter({"assetId": "1", "meteringPointNumber": "x"})
+    assert is_meter({"assetId": "1", "tabs": ["consumption"]})
+    assert is_meter({"assetId": "1", "address": {"streetName": "X"}})
+    assert not is_meter({"assetId": "1"})
+
+
+def test_normalize_energy_dict_wrappers_and_single_row():
+    assert normalize_energy({"hours": [{"consumption": 1}]}) == {
+        "results": [{"data": [{"consumption": 1}]}]
+    }
+    assert normalize_energy({"days": [1]}) == {"results": [{"data": [1]}]}
+    assert normalize_energy({"timestamp": "t", "totalConsumption": 2.5}) == {
+        "results": [{"data": [{"timestamp": "t", "totalConsumption": 2.5}]}]
+    }
+    assert normalize_energy({"timestamp": "t", "consumption": 1}) == {
+        "results": [{"data": [{"timestamp": "t", "consumption": 1}]}]
+    }
+    assert normalize_energy({"results": [{"data": []}]}) == {"results": [{"data": []}]}
