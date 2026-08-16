@@ -46,7 +46,7 @@ The `examples/` directory has longer programs. `resources/` has sample payloads,
 ## Related projects
 
 * [caruna-influxdb](https://github.com/Jalle19/caruna-influxdb)
-* Home Assistant custom component on the house box: `~/home-assistant-config/custom_components/caruna`
+* [ha_caruna](https://github.com/petri-lipponen-movesense/ha_caruna) — Home Assistant custom component
 
 ## Credits
 
