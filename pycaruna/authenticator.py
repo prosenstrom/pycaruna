@@ -62,6 +62,16 @@ def _login_action(html, form):
     return form.get("action") or "./login"
 
 
+def _is_login_page(href, current_url):
+    nxt = urlparse(urljoin(current_url, href))
+    cur = urlparse(current_url)
+    return (nxt.scheme, nxt.netloc, nxt.path.rstrip("/")) == (
+        cur.scheme,
+        cur.netloc,
+        cur.path.rstrip("/"),
+    )
+
+
 class Authenticator:
     def __init__(self, username, password):
         """
@@ -157,8 +167,9 @@ class Authenticator:
         if not nxt:
             feedback = _form_feedback(posted.text) or "Caruna+ rejected the login"
             raise CarunaAuthError(feedback)
-        if "error" in nxt.lower() or nxt.rstrip("/").endswith("login"):
-            raise CarunaAuthError("Caruna+ rejected the email or password")
+        if _is_login_page(nxt, page.url):
+            feedback = _form_feedback(posted.text) or "Caruna+ rejected the email or password"
+            raise CarunaAuthError(feedback)
 
         follow = session.get(urljoin(posted.url, nxt), timeout=30)
         follow.raise_for_status()
