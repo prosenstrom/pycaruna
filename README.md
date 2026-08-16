@@ -1,46 +1,57 @@
-﻿# pycaruna
+# pycaruna
 
-[![PyPI version](https://badge.fury.io/py/pycaruna.svg)](https://badge.fury.io/py/pycaruna)
+Fork of [Jalle19/pycaruna](https://github.com/Jalle19/pycaruna) for the current [Caruna+](https://plus.caruna.fi/) API (2026).
 
-Basic Python implementation for interfacing with Caruna Plus (sometimes called _Caruna+_). It supports only basic 
-methods, but enough to extract electricity usage data for further processing.
+Basic Python client for Caruna Plus. Enough to log in and pull electricity usage.
 
 Supported features:
 
+* Log in with the plus.caruna.fi email and password (not Suomi.fi)
 * Get user profile information
-* Get metering points ("assets")
-* Get consumption data (daily/hourly)
+* Get household metering points (`consumptionMeteringPoint`)
+* Get consumption data (daily / monthly / yearly)
+
+## Install
+
+```
+pip install git+https://github.com/prosenstrom/pycaruna.git
+```
+
+This fork is not published on PyPI. Upstream `pycaruna==1.0.3` still talks to an older login and JSON shape.
 
 ## Usage
 
-The project is published on PyPI: https://pypi.org/project/pycaruna/ . You can use this package by adding the 
-following to your `requirements.txt`:
+```python
+from pycaruna import Authenticator, CarunaPlus, TimeSpan, customer_ids_from_user
 
+login = Authenticator(email, password).login()
+client = CarunaPlus(login["token"])
+customer_id = customer_ids_from_user(login["user"])[0]
+meters = client.get_metering_points(customer_id)
+hours = client.get_energy(
+    customer_id, meters[0]["assetId"], TimeSpan.DAILY, 2026, 8, 16
+)
 ```
-pycaruna
-```
 
-The `examples/` directory has example Python programs illustrating how to use the library.
+`get_energy()` always returns `{ "results": [ { "data": [ ...rows ] } ] }`. Each row may use `totalConsumption` (current API) or `consumption` (older API).
 
-The `resources/` directory has examples of API response structures.
+The `examples/` directory has longer programs. `resources/` has older sample payloads; live energy data is now a flat list.
 
 ## Caveats
 
-* The authentication procedure requires a lot of HTTP requests to be sent back and forth, so the process is 
-  relatively slow. It's best to store and reuse the token produced by it instead of doing the authentication 
-  process all over again all the time.
-* ~~During daylight savings time changes, the API may return a duplicate datapoint (same timestamp in two consecutive 
-  data points). See https://github.com/Jalle19/pycaruna/issues/7 for more details.~~ This has reportedly been fixed, see
-  https://github.com/Jalle19/pycaruna/issues/7#issuecomment-2660900192
+* Login is a long redirect dance. Reuse the token (`expiresAt`, typically ~60 minutes).
+* Household meters live at `/api/customers/{id}/assets/meteringpoints`, not only `/assets`.
+* The energy endpoint returns a list of hours, not the old `results` wrapper. This fork normalizes that.
 
 ## Related projects
 
-* [caruna-influxdb](https://github.com/Jalle19/caruna-influxdb) - a collection of scripts for ingesting your Caruna data 
-into InfluxDB
+* [caruna-influxdb](https://github.com/Jalle19/caruna-influxdb)
+* Home Assistant custom component on the house box: `~/home-assistant-config/custom_components/caruna`
 
 ## Credits
 
-https://github.com/kimmolinna/pycaruna
+* [kimmolinna/pycaruna](https://github.com/kimmolinna/pycaruna)
+* [Jalle19/pycaruna](https://github.com/Jalle19/pycaruna)
 
 ## License
 

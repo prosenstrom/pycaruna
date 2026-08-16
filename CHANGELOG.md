@@ -1,5 +1,14 @@
 # Change log
 
+## 1.1.0
+
+Fork of [Jalle19/pycaruna](https://github.com/Jalle19/pycaruna) with the 2025–2026 plus.caruna.fi changes:
+
+* Login follows the live Wicket form and accepts either `Ajax-Location` or an XML `<redirect>` (the old hardcoded form action plus header-only redirect no longer works).
+* `CarunaPlus.get_metering_points()` loads household meters from `/assets/meteringpoints` (`consumptionMeteringPoint`) and falls back to `/assets`.
+* `CarunaPlus.get_energy()` accepts a flat `totalConsumption` list as well as the older `{results:[{data:[…]}]}` wrapper.
+* Raises `CarunaAuthError` / `CarunaApiError` instead of a raw `KeyError` when Caruna changes the dance again.
+
 ## 1.0.3
 * Fix authentication flow (https://github.com/Jalle19/pycaruna/pull/14, thanks to @jarmoruuth)
 

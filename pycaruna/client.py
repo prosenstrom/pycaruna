@@ -1,17 +1,40 @@
-import requests
-import pycaruna.utils as utils
+import logging
 from enum import Enum
+
+import requests
+
+import pycaruna.utils as utils
+from pycaruna.exceptions import CarunaApiError
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class TimeSpan(Enum):
-    DAILY = 'daily'
-    MONTHLY = 'monthly'
-    YEARLY = 'yearly'
+    DAILY = "daily"
+    MONTHLY = "monthly"
+    YEARLY = "yearly"
 
 
 class CarunaPlus:
     def __init__(self, token):
         self.token = token
+
+    def _get_json(self, path, params=None):
+        response = requests.get(
+            url=utils.create_caruna_plus_url(path),
+            params=params,
+            headers=utils.create_caruna_plus_headers(self.token),
+            timeout=30,
+        )
+        try:
+            payload = response.json()
+        except ValueError as err:
+            raise CarunaApiError(
+                f"Non-JSON response from {path} ({response.status_code})"
+            ) from err
+        if response.status_code in (401, 403):
+            raise CarunaApiError(f"Unauthorized calling {path}")
+        return payload
 
     def get_user_profile(self, customer_id):
         """
@@ -19,21 +42,56 @@ class CarunaPlus:
         :param customer_id: the customer number
         :return: the user information
         """
-        r = requests.get(url=utils.create_caruna_plus_url(f'/customers/{customer_id}/info'),
-                         headers=utils.create_caruna_plus_headers(self.token))
-
-        return r.json()
+        return self._get_json(f"/customers/{customer_id}/info")
 
     def get_assets(self, customer_id):
         """
-        Returns the metering points available for the specified customer
-        :param customer_id: the customer ID
-        :return: the metering points, including a lot of metadata about them
-        """
-        r = requests.get(url=utils.create_caruna_plus_url(f'/customers/{customer_id}/assets'),
-                         headers=utils.create_caruna_plus_headers(self.token))
+        Returns the assets available for the specified customer.
 
-        return r.json()
+        Household meters are usually *not* on this endpoint anymore; use
+        get_metering_points() instead.
+        :param customer_id: the customer ID
+        :return: the assets, including a lot of metadata about them
+        """
+        return self._get_json(f"/customers/{customer_id}/assets")
+
+    def get_metering_points(self, customer_id):
+        """
+        Returns household metering points for the specified customer.
+
+        Tries /assets/meteringpoints first (current plus.caruna.fi, type
+        consumptionMeteringPoint), then the older /assets list.
+        :param customer_id: the customer ID
+        :return: a list of metering-point dicts, each with assetId and customerId
+        """
+        points = []
+        seen = set()
+        for path in (
+            f"/customers/{customer_id}/assets/meteringpoints",
+            f"/customers/{customer_id}/assets",
+        ):
+            try:
+                payload = self._get_json(path)
+            except CarunaApiError as err:
+                _LOGGER.debug("Skipping %s: %s", path, err)
+                continue
+            for asset in utils.asset_items(payload):
+                if not utils.is_meter(asset):
+                    continue
+                asset_id = str(
+                    asset.get("assetId")
+                    or asset.get("meteringPointNumber")
+                    or asset.get("id")
+                    or ""
+                )
+                if not asset_id or asset_id in seen:
+                    continue
+                seen.add(asset_id)
+                item = dict(asset)
+                item["customerId"] = customer_id
+                item["assetId"] = asset_id
+                points.append(item)
+        return points
 
     def get_contracts(self, customer_id):
         """
@@ -41,14 +99,15 @@ class CarunaPlus:
         :param customer_id: the customer ID
         :return: the contracts
         """
-        r = requests.get(url=utils.create_caruna_plus_url(f'/customers/{customer_id}/contracts'),
-                         headers=utils.create_caruna_plus_headers(self.token))
-
-        return r.json()
+        return self._get_json(f"/customers/{customer_id}/contracts")
 
     def get_energy(self, customer_id, asset_id, timespan, year, month, day):
         """
-        Returns energy consumption for the specified metering point
+        Returns energy consumption for the specified metering point.
+
+        Accepts both the current flat hourly list (totalConsumption) and the
+        older {results:[{data:[...]}]} wrapper. Always returns the wrapper
+        form so callers can iterate results[].data[].
         :param customer_id: the customer ID
         :param asset_id: the asset ID
         :param timespan: the time span (a TimeSpan enum)
@@ -57,13 +116,13 @@ class CarunaPlus:
         :param day: the day
         :return: the consumption data
         """
-        r = requests.get(url=utils.create_caruna_plus_url(f'/customers/{customer_id}/assets/{asset_id}/energy'),
-                         params={
-                             'year': year,
-                             'month': month,
-                             'day': day,
-                             'timespan': timespan.value,
-                         },
-                         headers=utils.create_caruna_plus_headers(self.token))
-
-        return r.json()
+        payload = self._get_json(
+            f"/customers/{customer_id}/assets/{asset_id}/energy",
+            params={
+                "year": year,
+                "month": month,
+                "day": day,
+                "timespan": timespan.value,
+            },
+        )
+        return utils.normalize_energy(payload)
