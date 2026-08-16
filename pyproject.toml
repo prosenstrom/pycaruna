@@ -1,7 +1,7 @@
 
 [project]
 name = "pycaruna"
-version = "1.1.0"
+version = "1.1.1"
 description = "Caruna+ API client (fork of Jalle19/pycaruna for the 2026 API)"
 readme = "README.md"
 authors = [

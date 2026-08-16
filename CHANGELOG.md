@@ -1,5 +1,15 @@
 # Change log
 
+## 1.1.1
+
+* Document Python 3.12+, `energy_kwh()`, and `CarunaAuthError` / `CarunaApiError` in the README.
+* Cover the login flow in tests and require 90% coverage.
+* Stop publishing this fork to PyPI; install from git.
+* Pin GitHub Actions to SHAs, add Gitleaks, and tighten workflow token permissions.
+* Auto-merge Dependabot minor and patch updates. Bump `bandit` to 1.9.4, `setuptools` to 84, and `dependabot/fetch-metadata` to 3.1.0.
+* Manage live GitHub repository settings with Terraform.
+* Stop tracking JetBrains `.idea/` files.
+
 ## 1.1.0
 
 Fork of [Jalle19/pycaruna](https://github.com/Jalle19/pycaruna) with the 2025–2026 plus.caruna.fi changes:

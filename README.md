@@ -9,9 +9,11 @@ Supported features:
 * Log in with the plus.caruna.fi email and password (not Suomi.fi)
 * Get user profile information
 * Get household metering points (`consumptionMeteringPoint`)
-* Get consumption data (daily / monthly / yearly)
+* Get consumption data (`TimeSpan.DAILY` is hourly for one day, `MONTHLY` daily for a month, `YEARLY` monthly for a year)
 
 ## Install
+
+Requires Python 3.12 or newer.
 
 ```
 uv add git+https://github.com/prosenstrom/pycaruna.git
@@ -39,7 +41,13 @@ uv run ty check
 ## Usage
 
 ```python
-from pycaruna import Authenticator, CarunaPlus, TimeSpan, customer_ids_from_user
+from pycaruna import (
+    Authenticator,
+    CarunaPlus,
+    TimeSpan,
+    customer_ids_from_user,
+    energy_kwh,
+)
 
 login = Authenticator(email, password).login()
 client = CarunaPlus(login["token"])
@@ -48,9 +56,12 @@ meters = client.get_metering_points(customer_id)
 hours = client.get_energy(
     customer_id, meters[0]["assetId"], TimeSpan.DAILY, 2026, 8, 16
 )
+kwh = [energy_kwh(row) for row in hours["results"][0]["data"]]
 ```
 
-`get_energy()` always returns `{ "results": [ { "data": [ ...rows ] } ] }`. Each row may use `totalConsumption` (current API) or `consumption` (older API).
+`get_energy()` always returns `{ "results": [ { "data": [ ...rows ] } ] }`. Use `energy_kwh(row)` for the kWh value — rows may use `totalConsumption` (current API), `consumption` (older API), or `invoicedConsumption`.
+
+Login failures and expired tokens raise `CarunaAuthError`. Other HTTP or JSON failures raise `CarunaApiError`.
 
 The `examples/` directory has longer programs. `resources/` has sample payloads, including the current flat energy list and meteringpoints.
 
@@ -58,7 +69,7 @@ The `examples/` directory has longer programs. `resources/` has sample payloads,
 
 * Login is a long redirect dance. Reuse the token (`expiresAt`, typically ~60 minutes).
 * Household meters live at `/api/customers/{id}/assets/meteringpoints`, not only `/assets`.
-* The energy endpoint returns a list of hours, not the old `results` wrapper. This fork normalizes that.
+* The energy endpoint returns a flat list, not the old `results` wrapper. This fork normalizes that.
 
 ## Related projects
 
