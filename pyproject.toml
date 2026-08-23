@@ -37,7 +37,7 @@ test = [
 lint = [
     "bandit[toml]>=1.9.4",
     "ruff>=0.12",
-    "ty>=0.0.70",
+    "ty>=0.0.73",
 ]
 dev = [
     {include-group = "test"},
