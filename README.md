@@ -12,7 +12,7 @@ Supported features:
 * Get household metering points (`consumptionMeteringPoint`)
 * Get consumption data (`TimeSpan.DAILY` is hourly for one day, `MONTHLY` daily for a month, `YEARLY` monthly for a year)
 
-Login failures raise `CarunaAuthError`. Connectivity and unexpected HTTP/JSON failures raise `CarunaApiError`.
+Login failures and expired tokens raise `CarunaAuthError`. Other HTTP or JSON failures raise `CarunaApiError`. Non-OK JSON responses are no longer returned as payload.
 
 ```python
 from pycaruna import (
