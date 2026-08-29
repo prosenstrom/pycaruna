@@ -1,5 +1,8 @@
 # Change log
 
+## Unreleased
+* Fix login against the current plus.caruna.fi Wicket form: read the form action from the page, follow `Ajax-Location` or an XML `<redirect>`, and raise `CarunaAuthError` / `CarunaApiError` instead of a raw `KeyError` when the dance changes again.
+
 ## 1.0.3
 * Fix authentication flow (https://github.com/Jalle19/pycaruna/pull/14, thanks to @jarmoruuth)
 

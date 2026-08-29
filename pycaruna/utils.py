@@ -16,10 +16,11 @@ def create_caruna_plus_headers(token):
 def get_hidden_form_vars(soup):
     vars = {}
 
-    for var in soup.findAll('input', type="hidden"):
-        try:
-            vars[var['name']] = var['value']
-        except KeyError:
-            vars[var['name']] = ''
+    for var in soup.find_all('input'):
+        name = var.get('name')
+        if not name:
+            continue
+        if (var.get('type') or 'text').lower() == 'hidden':
+            vars[name] = var.get('value') or ''
 
     return vars

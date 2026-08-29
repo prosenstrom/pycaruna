@@ -7,9 +7,12 @@ methods, but enough to extract electricity usage data for further processing.
 
 Supported features:
 
+* Log in with the plus.caruna.fi email and password (not Suomi.fi)
 * Get user profile information
 * Get metering points ("assets")
 * Get consumption data (daily/hourly)
+
+Login failures raise `CarunaAuthError`. Connectivity and unexpected HTTP/JSON failures raise `CarunaApiError`.
 
 ## Usage
 
@@ -27,8 +30,10 @@ The `resources/` directory has examples of API response structures.
 ## Caveats
 
 * The authentication procedure requires a lot of HTTP requests to be sent back and forth, so the process is 
-  relatively slow. It's best to store and reuse the token produced by it instead of doing the authentication 
-  process all over again all the time.
+  relatively slow. It's best to store and reuse the token produced by it (`expiresAt`, typically ~60 minutes)
+  instead of doing the authentication process all over again all the time.
+* The login form action is no longer hardcoded. The client reads the live Wicket action and accepts either
+  an `Ajax-Location` header or an XML `<redirect>` after posting credentials.
 * ~~During daylight savings time changes, the API may return a duplicate datapoint (same timestamp in two consecutive 
   data points). See https://github.com/Jalle19/pycaruna/issues/7 for more details.~~ This has reportedly been fixed, see
   https://github.com/Jalle19/pycaruna/issues/7#issuecomment-2660900192
