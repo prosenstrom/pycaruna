@@ -1,0 +1,14 @@
+[
+  {
+    "timestamp": "2026-08-15T21:00:00.000Z",
+    "temperature": 12.1,
+    "totalConsumption": 1.33,
+    "production": null
+  },
+  {
+    "timestamp": "2026-08-15T22:00:00.000Z",
+    "temperature": 11.8,
+    "totalConsumption": 1.55,
+    "production": null
+  }
+]

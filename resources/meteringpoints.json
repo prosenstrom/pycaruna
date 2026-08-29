@@ -1,0 +1,17 @@
+[
+  {
+    "type": "consumptionMeteringPoint",
+    "assetId": "XXX",
+    "gsrn": "XXX",
+    "meteringPointNumber": "XXX",
+    "address": {
+      "streetName": "XXX",
+      "houseNumber": "1",
+      "postalCode": "00100",
+      "postOffice": "Helsinki"
+    },
+    "tabs": [
+      "consumption"
+    ]
+  }
+]
