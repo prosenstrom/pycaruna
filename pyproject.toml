@@ -31,13 +31,13 @@ build-backend = "setuptools.build_meta"
 
 [dependency-groups]
 test = [
-    "pytest>=7",
+    "pytest>=9.2.0",
     "pytest-cov>=7.1.0",
 ]
 lint = [
     "bandit[toml]>=1.9.4",
-    "ruff>=0.17.1",
-    "ty>=0.0.90",
+    "ruff>=0.17.3",
+    "ty>=0.0.94",
 ]
 dev = [
     {include-group = "test"},
